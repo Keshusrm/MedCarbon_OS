@@ -1,0 +1,73 @@
+# ─── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+env/
+venv/
+ENV/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─── ML Models & Training Artifacts ──────────────────────
+backend/app/ml/models/
+backend/app/ml/__pycache__/
+*.pkl
+*.pt
+*.npy
+*.h5
+*.joblib
+
+# ─── Node / Frontend ─────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+*.local
+
+# ─── Environment Variables ────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+frontend/.env.local
+frontend/.env.production
+backend/.env
+
+# ─── Dataset / Data Files ────────────────────────────────
+# Uncomment if you do NOT want to commit the xlsx dataset
+# backend/app/data/*.xlsx
+# *.xlsx
+
+# ─── OS & Editor Files ───────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
+*.sublime-project
+*.sublime-workspace
+
+# ─── Logs ────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Misc ────────────────────────────────────────────────
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage/
+htmlcov/
+.coverage

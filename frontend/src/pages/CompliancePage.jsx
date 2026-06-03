@@ -1,0 +1,156 @@
+import { CheckCircle, Shield, Globe, Leaf, TrendingUp, Award } from 'lucide-react';
+import DashboardLayout from '../components/DashboardLayout';
+import { useLanguage } from '../context/LanguageContext';
+
+const frameworks = [
+  {
+    id: 'ghg',
+    name: 'GHG Protocol',
+    description: 'Scope 1, 2, and 3 emission tracking across all facility operations.',
+    status: 'Compliant',
+    score: 96,
+    icon: Shield,
+    color: 'emerald',
+    standards: ['Scope 1 – Direct combustion', 'Scope 2 – Purchased electricity', 'Scope 3 – Value chain'],
+  },
+  {
+    id: 'iso14064',
+    name: 'ISO 14064',
+    description: 'International standard for greenhouse gas quantification and reporting.',
+    status: 'Compliant',
+    score: 94,
+    icon: Award,
+    color: 'blue',
+    standards: ['Organizational boundary', 'Activity data verified', 'Third-party audit: Q3 2024'],
+  },
+  {
+    id: 'sbti',
+    name: 'SBTi 1.5°C Pathway',
+    description: 'Science-Based Targets initiative alignment toward 1.5°C warming limit.',
+    status: 'On Track',
+    score: 75,
+    icon: TrendingUp,
+    color: 'teal',
+    standards: ['Near-term target: 2030', 'Long-term target: 2050 net-zero', 'Annual reduction rate: 4.2%'],
+  },
+  {
+    id: 'who',
+    name: 'WHO Climate-Smart Healthcare',
+    description: 'WHO roadmap to net-zero emissions in healthcare systems by 2050.',
+    status: 'In Progress',
+    score: 61,
+    icon: Globe,
+    color: 'purple',
+    standards: ['Energy efficiency programs', 'Renewable procurement: 28%', 'Net-zero target: 2050'],
+  },
+  {
+    id: 'sdg',
+    name: 'UN SDGs Aligned',
+    description: 'Sustainable Development Goals — SDGs 3, 7, 12, and 13.',
+    status: 'Aligned',
+    score: 88,
+    icon: Leaf,
+    color: 'amber',
+    standards: ['SDG 3 – Good Health & Well-Being', 'SDG 7 – Affordable Clean Energy', 'SDG 12 – Responsible Consumption', 'SDG 13 – Climate Action'],
+  },
+];
+
+function ScoreRing({ score, color }) {
+  const radius = 26;
+  const circ = 2 * Math.PI * radius;
+  const offset = circ - (score / 100) * circ;
+  const colorMap = {
+    emerald: '#10B981', blue: '#3B82F6', teal: '#00BFA5', purple: '#8B5CF6', amber: '#F59E0B',
+  };
+  return (
+    <div className="relative w-16 h-16 flex items-center justify-center">
+      <svg width="64" height="64" className="-rotate-90">
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="5" className="dark:stroke-navy-700" />
+        <circle cx="32" cy="32" r={radius} fill="none" stroke={colorMap[color]} strokeWidth="5" strokeLinecap="round"
+          strokeDasharray={circ} strokeDashoffset={offset} className="transition-all duration-1000" />
+      </svg>
+      <span className="absolute text-sm font-black text-gray-900 dark:text-white">{score}%</span>
+    </div>
+  );
+}
+
+export default function CompliancePage() {
+  const { t } = useLanguage();
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6 animate-fade-in">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">{t('comp_title')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-2xl">{t('comp_subtitle')}</p>
+        </div>
+
+        {/* Overall Score Banner */}
+        <div className="hero-gradient rounded-2xl p-6 flex items-center gap-6">
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <svg width="96" height="96" className="-rotate-90">
+              <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="7" />
+              <circle cx="48" cy="48" r="40" fill="none" stroke="#00BFA5" strokeWidth="7" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 40} strokeDashoffset={2 * Math.PI * 40 * (1 - 0.83)} />
+            </svg>
+            <span className="absolute text-2xl font-black text-white">83%</span>
+          </div>
+          <div>
+            <h2 className="text-white text-xl font-bold mb-1">Overall Compliance Score</h2>
+            <p className="text-teal-300 text-sm mb-3">Metro Health System — Reporting Period: Q1–Q2 2024</p>
+            <div className="flex gap-3">
+              {['GHG Protocol', 'ISO 14064', 'SBTi 1.5°C'].map(b => (
+                <span key={b} className="bg-white/10 border border-white/20 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                  <CheckCircle size={10} className="text-teal-300" /> {b}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Framework Cards */}
+        <div className="grid grid-cols-2 gap-5">
+          {frameworks.map(f => (
+            <div key={f.id} className="card p-5">
+              <div className="flex gap-4 items-start">
+                <ScoreRing score={f.score} color={f.color} />
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">{f.name}</h3>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      f.status === 'Compliant' || f.status === 'Aligned' || f.status === 'On Track'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
+                    }`}>
+                      {f.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{f.description}</p>
+                  <ul className="space-y-1">
+                    {f.standards.map(s => (
+                      <li key={s} className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                        <CheckCircle size={10} className="text-teal-400 flex-shrink-0" /> {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Download Audit */}
+        <div className="card p-5 flex justify-between items-center">
+          <div>
+            <h3 className="font-bold text-gray-900 dark:text-white">Full Compliance Audit Report</h3>
+            <p className="text-xs text-gray-400 mt-0.5">GHG Protocol + ISO 14064 + SBTi — Q2 2024 Verified</p>
+          </div>
+          <button id="download-audit-btn" className="btn-primary py-2.5 px-5 text-sm">
+            Download Report PDF
+          </button>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

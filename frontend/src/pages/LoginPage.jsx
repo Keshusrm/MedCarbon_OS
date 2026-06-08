@@ -5,6 +5,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 export default function LoginPage() {
   const { t, language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
@@ -12,11 +14,46 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignIn = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setErrorMsg('');
+    setLoading(true);
+
+    try {
+      const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Authentication failed');
+      }
+
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('userEmail', email);
+
+      if (isSignUp) {
+        navigate('/onboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Server connection failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,9 +113,17 @@ export default function LoginPage() {
             <Leaf size={24} className="text-teal-400" />
             <span className="text-xl font-bold text-cobalt-500 dark:text-cobalt-400">MedCarbon OS</span>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">{t('login_tagline')}</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            {isSignUp ? "Create a password for your account." : t('login_tagline')}
+          </p>
 
-          <form onSubmit={handleSignIn} className="space-y-5">
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-900/50">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wider mb-1.5">
@@ -102,11 +147,13 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wider">
-                  {t('login_pass_label')}
+                  {isSignUp ? "NEW PASSWORD" : t('login_pass_label')}
                 </label>
-                <button type="button" className="text-xs text-cobalt-500 dark:text-cobalt-400 hover:underline">
-                  {t('login_forgot')}
-                </button>
+                {!isSignUp && (
+                  <button type="button" className="text-xs text-cobalt-500 dark:text-cobalt-400 hover:underline">
+                    {t('login_forgot')}
+                  </button>
+                )}
               </div>
               <div className="relative">
                 <input
@@ -129,24 +176,33 @@ export default function LoginPage() {
             </div>
 
             {/* Remember Me */}
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                id="remember-device"
-                checked={remember}
-                onChange={e => setRemember(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 dark:border-navy-600 text-cobalt-500 focus:ring-cobalt-500"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400">{t('login_remember')}</span>
-            </label>
+            {!isSignUp && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="remember-device"
+                  checked={remember}
+                  onChange={e => setRemember(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-navy-600 text-cobalt-500 focus:ring-cobalt-500"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">{t('login_remember')}</span>
+              </label>
+            )}
 
-            {/* Sign In Button */}
+            {/* Submit Button */}
             <button
               id="signin-btn"
               type="submit"
-              className="btn-primary w-full text-center py-3 text-base"
+              disabled={loading}
+              className="btn-primary w-full text-center py-3 text-base flex items-center justify-center gap-2"
             >
-              {t('login_btn')}
+              {loading ? (
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isSignUp ? (
+                'Create Account & Login →'
+              ) : (
+                t('login_btn')
+              )}
             </button>
 
             {/* Divider */}
@@ -183,16 +239,31 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Sign Up Link */}
+            {/* Toggle Link */}
             <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-              {t('login_no_access')}{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/onboard')}
-                className="text-cobalt-500 dark:text-cobalt-400 font-medium hover:underline"
-              >
-                {t('login_signup')}
-              </button>
+              {isSignUp ? (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setIsSignUp(false); setErrorMsg(''); }}
+                    className="text-cobalt-500 dark:text-cobalt-400 font-medium hover:underline"
+                  >
+                    Sign In
+                  </button>
+                </>
+              ) : (
+                <>
+                  {t('login_no_access')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setIsSignUp(true); setErrorMsg(''); }}
+                    className="text-cobalt-500 dark:text-cobalt-400 font-medium hover:underline"
+                  >
+                    {t('login_signup')}
+                  </button>
+                </>
+              )}
             </p>
           </form>
         </div>
@@ -200,3 +271,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Activity, TrendingUp, ClipboardCheck, 
-  Zap, HelpCircle, CheckCircle2, Leaf 
+  Zap, HelpCircle, CheckCircle2, Leaf, Sparkles 
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -11,6 +11,7 @@ const navItems = [
   { key: 'sidebar_carbon_forecasting',  path: '/forecasting',  icon: TrendingUp },
   { key: 'sidebar_compliance_audit',    path: '/compliance',   icon: ClipboardCheck },
   { key: 'sidebar_resource_optimization',path: '/optimization',icon: Zap },
+  { key: 'sidebar_carbon_predictor',     path: '/predict',      icon: Sparkles },
 ];
 
 export default function Sidebar() {

@@ -14,6 +14,7 @@ const en = {
   sidebar_carbon_forecasting: "Carbon Forecasting",
   sidebar_compliance_audit: "Compliance Audit",
   sidebar_resource_optimization: "Resource Optimization",
+  sidebar_carbon_predictor: "Carbon Predictor",
   sidebar_help: "Help Centre",
   sidebar_status: "System Status",
   sidebar_executive: "Executive Summary",

@@ -8,6 +8,16 @@ import TelemetryPage from './pages/TelemetryPage';
 import OptimizationPage from './pages/OptimizationPage';
 import CompliancePage from './pages/CompliancePage';
 import ForecastingPage from './pages/ForecastingPage';
+import PredictionPage from './pages/PredictionPage';
+
+// Route Guard Component
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 export default function App() {
   return (
@@ -15,14 +25,21 @@ export default function App() {
       <LanguageProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/onboard" element={<OnboardPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/telemetry" element={<TelemetryPage />} />
-            <Route path="/optimization" element={<OptimizationPage />} />
-            <Route path="/compliance" element={<CompliancePage />} />
-            <Route path="/forecasting" element={<ForecastingPage />} />
+            
+            {/* Protected Dashboard/App Routes */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/onboard" element={<ProtectedRoute><OnboardPage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/telemetry" element={<ProtectedRoute><TelemetryPage /></ProtectedRoute>} />
+            <Route path="/optimization" element={<ProtectedRoute><OptimizationPage /></ProtectedRoute>} />
+            <Route path="/compliance" element={<ProtectedRoute><CompliancePage /></ProtectedRoute>} />
+            <Route path="/forecasting" element={<ProtectedRoute><ForecastingPage /></ProtectedRoute>} />
+            <Route path="/predict" element={<ProtectedRoute><PredictionPage /></ProtectedRoute>} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </BrowserRouter>
       </LanguageProvider>

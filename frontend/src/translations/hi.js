@@ -14,6 +14,7 @@ const hi = {
   sidebar_carbon_forecasting: "कार्बन पूर्वानुमान",
   sidebar_compliance_audit: "अनुपालन ऑडिट",
   sidebar_resource_optimization: "संसाधन अनुकूलन",
+  sidebar_carbon_predictor: "कार्बन भविष्यवक्ता",
   sidebar_help: "सहायता केंद्र",
   sidebar_status: "सिस्टम स्थिति",
   sidebar_executive: "कार्यकारी सारांश",

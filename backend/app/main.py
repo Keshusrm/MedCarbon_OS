@@ -1,7 +1,11 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio, json, random, math, time
+import asyncio, json, random, math, time, sqlite3, pickle
 from pathlib import Path
+from pydantic import BaseModel
+
+from app.database import get_db_connection
+from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
 
 app = FastAPI(title="MedCarbon OS API", version="1.0.0")
 
@@ -16,6 +20,8 @@ app.add_middleware(
 # ── Load ML stats if trained ──────────────────────────────────────────────────
 MODELS_PATH = Path(__file__).parent / "ml" / "models"
 _stats = None
+_rf_model = None
+_rf_cols = None
 
 def get_stats():
     global _stats
@@ -25,6 +31,43 @@ def get_stats():
             with open(stats_file) as f:
                 _stats = json.load(f)
     return _stats
+
+def load_rf_model():
+    global _rf_model, _rf_cols
+    if _rf_model is None:
+        model_path = MODELS_PATH / "rf_model.pkl"
+        if model_path.exists():
+            with open(model_path, "rb") as f:
+                _rf_model, _rf_cols = pickle.load(f)
+    return _rf_model, _rf_cols
+
+# ── Schemas ──────────────────────────────────────────────────────────────────
+class UserRegister(BaseModel):
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+class PredictRequest(BaseModel):
+    electricity_facility: float
+    fans_electricity: float
+    cooling_electricity: float
+    heating_electricity: float
+    interior_lights_electricity: float
+    interior_equipment_electricity: float
+    gas_facility: float
+    heating_gas: float
+    interior_equipment_gas: float
+    water_heater_gas: float
+    hour: int
+    day_of_year: int
+
 
 # ── Helper: generate realistic emission value ─────────────────────────────────
 def emission_at_hour(hour: int, noise: float = 0.0) -> float:
@@ -142,3 +185,99 @@ async def ws_telemetry(ws: WebSocket):
         pass
     except Exception:
         pass
+
+# ── Authentication Routes ──────────────────────────────────────────────────────
+
+@app.post("/api/auth/register", response_model=TokenResponse)
+def register(user: UserRegister):
+    hashed = get_password_hash(user.password)
+    try:
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+                (user.email, hashed)
+            )
+            conn.commit()
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    
+    token = create_access_token(data={"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/api/auth/login", response_model=TokenResponse)
+def login(user: UserLogin):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT password_hash FROM users WHERE email = ?", (user.email,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+        
+        db_hash = row["password_hash"]
+        if not verify_password(user.password, db_hash):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+            
+    token = create_access_token(data={"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/api/auth/me")
+def get_me(current_user: str = Depends(get_current_user)):
+    return {"email": current_user}
+
+# ── Prediction Endpoint ────────────────────────────────────────────────────────
+
+@app.post("/api/predict")
+def predict_footprint(req: PredictRequest, current_user: str = Depends(get_current_user)):
+    model, cols = load_rf_model()
+    if model is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="ML model not loaded or trained yet")
+    
+    total_electricity = (
+        req.electricity_facility +
+        req.fans_electricity +
+        req.cooling_electricity +
+        req.heating_electricity +
+        req.interior_lights_electricity +
+        req.interior_equipment_electricity
+    )
+    total_gas = (
+        req.gas_facility +
+        req.heating_gas +
+        req.interior_equipment_gas +
+        req.water_heater_gas
+    )
+    
+    # Scope 1 & 2 calculations matching pipeline.py
+    scope1_tco2e = total_gas * 0.202 * (1 / 1000)
+    scope2_tco2e = total_electricity * 0.386 * (1 / 1000)
+    
+    features = {
+        'Electricity:Facility [kW](Hourly)': req.electricity_facility,
+        'Fans:Electricity [kW](Hourly)': req.fans_electricity,
+        'Cooling:Electricity [kW](Hourly)': req.cooling_electricity,
+        'Heating:Electricity [kW](Hourly)': req.heating_electricity,
+        'InteriorLights:Electricity [kW](Hourly)': req.interior_lights_electricity,
+        'InteriorEquipment:Electricity [kW](Hourly)': req.interior_equipment_electricity,
+        'Gas:Facility [kW](Hourly)': req.gas_facility,
+        'Heating:Gas [kW](Hourly)': req.heating_gas,
+        'InteriorEquipment:Gas [kW](Hourly)': req.interior_equipment_gas,
+        'Water Heater:WaterSystems:Gas [kW](Hourly)': req.water_heater_gas,
+        'total_electricity_kwh': total_electricity,
+        'total_gas_kwh': total_gas,
+        'hour': req.hour,
+        'day_of_year': req.day_of_year
+    }
+    
+    import pandas as pd
+    X = pd.DataFrame([features])[cols]
+    
+    predicted_total = float(model.predict(X)[0])
+    
+    return {
+        "predicted_total": round(predicted_total, 4),
+        "scope1_calculated": round(scope1_tco2e, 4),
+        "scope2_calculated": round(scope2_tco2e, 4),
+        "total_electricity_kwh": round(total_electricity, 2),
+        "total_gas_kwh": round(total_gas, 2)
+    }
+

@@ -52,6 +52,8 @@ const hi = {
   onboard_fullname_ph: "डॉ. जूलियन स्टर्लिंग",
   onboard_email: "कार्य ईमेल",
   onboard_email_ph: "j.sterling@metrohealth.org",
+  onboard_password: "पासवर्ड बनाएं",
+  onboard_password_ph: "••••••••",
   onboard_role: "संस्थागत भूमिका",
   onboard_cso: "सीएसओ",
   onboard_fm: "सुविधा प्रबंधक",

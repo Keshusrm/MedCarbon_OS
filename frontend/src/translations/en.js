@@ -52,6 +52,8 @@ const en = {
   onboard_fullname_ph: "Dr. Julian Sterling",
   onboard_email: "Work Email",
   onboard_email_ph: "j.sterling@metrohealth.org",
+  onboard_password: "Create Password",
+  onboard_password_ph: "••••••••",
   onboard_role: "Institutional Role",
   onboard_cso: "CSO",
   onboard_fm: "FACILITY MANAGER",

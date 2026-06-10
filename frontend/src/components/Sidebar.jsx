@@ -10,7 +10,6 @@ const navItems = [
   { key: 'sidebar_facility_telemetry',  path: '/telemetry',    icon: Activity },
   { key: 'sidebar_carbon_forecasting',  path: '/forecasting',  icon: TrendingUp },
   { key: 'sidebar_compliance_audit',    path: '/compliance',   icon: ClipboardCheck },
-  { key: 'sidebar_resource_optimization',path: '/optimization',icon: Zap },
   { key: 'sidebar_carbon_predictor',     path: '/predict',      icon: Sparkles },
 ];
 

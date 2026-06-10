@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Building2, Stethoscope, Leaf, CheckCircle } from 'lucide-react';
+import { Shield, Building2, Stethoscope, Leaf, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const steps = ['onboard_step1', 'onboard_step2', 'onboard_step3'];
 
 const roles = [
@@ -19,11 +20,73 @@ export default function OnboardPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedRole, setSelectedRole] = useState(null);
-  const [form, setForm] = useState({ fullName: '', email: '', institution: '', address: '', facilityName: '', dept: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', institution: '', address: '', facilityName: '', dept: '' });
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(s => s + 1);
-    else navigate('/dashboard');
+  const handleNext = async () => {
+    setErrorMsg('');
+
+    // Input Validation before moving to the next step
+    if (currentStep === 0) {
+      if (!form.fullName || !form.email || !form.password || !selectedRole) {
+        setErrorMsg('Please fill in all personal details, including password and role.');
+        return;
+      }
+    } else if (currentStep === 1) {
+      if (!form.institution || !form.address) {
+        setErrorMsg('Please fill in institution details.');
+        return;
+      }
+    } else if (currentStep === 2) {
+      if (!form.facilityName) {
+        setErrorMsg('Please fill in facility details.');
+        return;
+      }
+    }
+
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(s => s + 1);
+    } else {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Registration failed');
+        }
+
+        // Store token and user email in localStorage
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('userEmail', form.email);
+
+        // Store the other onboard details in localStorage
+        localStorage.setItem('userFullName', form.fullName);
+        localStorage.setItem('userRole', selectedRole);
+        localStorage.setItem('userInstitution', form.institution);
+        localStorage.setItem('userAddress', form.address);
+        localStorage.setItem('userFacilityName', form.facilityName);
+
+        navigate('/dashboard');
+      } catch (err) {
+        console.error(err);
+        setErrorMsg(err.message || 'Server connection failed');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (
@@ -82,6 +145,12 @@ export default function OnboardPage() {
             ))}
           </div>
 
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-900/50">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
           {/* Step 1 */}
           {currentStep === 0 && (
             <div className="animate-slide-up">
@@ -110,6 +179,26 @@ export default function OnboardPage() {
                     onChange={e => setForm({...form, email: e.target.value})}
                     className="input-field"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('onboard_password')}</label>
+                  <div className="relative">
+                    <input
+                      id="onboard-password-input"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder={t('onboard_password_ph')}
+                      value={form.password}
+                      onChange={e => setForm({...form, password: e.target.value})}
+                      className="input-field pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('onboard_role')}</label>
@@ -192,9 +281,16 @@ export default function OnboardPage() {
           <button
             id="next-step-btn"
             onClick={handleNext}
-            className="btn-primary w-full mt-8 py-3 text-sm tracking-wider"
+            disabled={loading}
+            className="btn-primary w-full mt-8 py-3 text-sm tracking-wider flex items-center justify-center gap-2"
           >
-            {currentStep < steps.length - 1 ? t('onboard_next') : 'Launch Dashboard →'}
+            {loading ? (
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : currentStep < steps.length - 1 ? (
+              t('onboard_next')
+            ) : (
+              'Launch Dashboard →'
+            )}
           </button>
 
           <p className="text-center text-xs text-gray-400 mt-6 tracking-wider">{t('onboard_footer')}</p>

@@ -21,16 +21,31 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownRef]);
 
-  const userFullName = localStorage.getItem('userFullName') || 'Metro Health';
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+  const email = localStorage.getItem('userEmail') || '';
+  const userFullName = localStorage.getItem('userFullName') || '';
+
+  const getInitials = () => {
+    if (userFullName) {
+      return userFullName
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    if (email) {
+      const prefix = email.split('@')[0];
+      const parts = prefix.split(/[\._\-]/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return prefix.substring(0, 2).toUpperCase();
+    }
+    return 'MH';
   };
-  const initials = getInitials(userFullName);
+
+  const initials = getInitials();
 
   return (
     <header className="h-14 bg-white dark:bg-navy-900 border-b border-gray-100 dark:border-navy-700 flex items-center px-6 gap-4 transition-colors duration-300 sticky top-0 z-40">
@@ -123,7 +138,9 @@ export default function Navbar() {
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 flex items-center gap-2.5 transition-colors font-medium"
               >
-                <User size={15} className="text-gray-400" />
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cobalt-500 to-teal-400 flex items-center justify-center text-white text-[9px] font-bold">
+                  {initials}
+                </div>
                 Profile
               </button>
               <button

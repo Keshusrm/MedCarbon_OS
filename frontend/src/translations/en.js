@@ -34,8 +34,8 @@ const en = {
   login_signup: "Sign up for an institutional account",
   login_quote: '"The health of our patients is inextricably linked to the health of our planet."',
   login_quote_attr: "Chief Sustainability Officer, Metro Health",
-  login_report_label: "SUSTAINABILITY REPORT 2024",
-  login_copyright: "© 2024 MEDCARBON OS",
+  login_report_label: "SUSTAINABILITY REPORT 2026",
+  login_copyright: "© 2026 MEDCARBON OS",
   login_gov_tier: "INSTITUTIONAL GOVERNANCE TIER",
 
   // Onboarding
@@ -59,7 +59,7 @@ const en = {
   onboard_fm: "FACILITY MANAGER",
   onboard_com: "CHIEF OF MEDICINE",
   onboard_next: "NEXT STEP →",
-  onboard_footer: "INSTITUTIONAL GOVERNANCE PLATFORM © 2024 MEDCARBON OS",
+  onboard_footer: "INSTITUTIONAL GOVERNANCE PLATFORM © 2026 MEDCARBON OS",
 
   // Dashboard
   dash_hero_title: "AI-Powered Healthcare Carbon Footprint Tracker & Optimization Dashboard",

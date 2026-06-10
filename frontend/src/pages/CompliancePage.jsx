@@ -21,7 +21,7 @@ const frameworks = [
     score: 94,
     icon: Award,
     color: 'blue',
-    standards: ['Organizational boundary', 'Activity data verified', 'Third-party audit: Q3 2024'],
+    standards: ['Organizational boundary', 'Activity data verified', 'Third-party audit: Q3 2026'],
   },
   {
     id: 'sbti',
@@ -98,7 +98,7 @@ export default function CompliancePage() {
           </div>
           <div>
             <h2 className="text-white text-xl font-bold mb-1">Overall Compliance Score</h2>
-            <p className="text-teal-300 text-sm mb-3">Metro Health System — Reporting Period: Q1–Q2 2024</p>
+            <p className="text-teal-300 text-sm mb-3">Metro Health System — Reporting Period: Q1–Q2 2026</p>
             <div className="flex gap-3">
               {['GHG Protocol', 'ISO 14064', 'SBTi 1.5°C'].map(b => (
                 <span key={b} className="bg-white/10 border border-white/20 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
@@ -144,7 +144,7 @@ export default function CompliancePage() {
         <div className="card p-5 flex justify-between items-center">
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white">Full Compliance Audit Report</h3>
-            <p className="text-xs text-gray-400 mt-0.5">GHG Protocol + ISO 14064 + SBTi — Q2 2024 Verified</p>
+            <p className="text-xs text-gray-400 mt-0.5">GHG Protocol + ISO 14064 + SBTi — Q2 2026 Verified</p>
           </div>
           <button id="download-audit-btn" className="btn-primary py-2.5 px-5 text-sm">
             Download Report PDF

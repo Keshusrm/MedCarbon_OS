@@ -6,17 +6,32 @@ export default function ProfilePage() {
   const { t } = useLanguage();
 
   // Load details from localStorage
-  const fullName = localStorage.getItem('userFullName') || 'Dr. Julian Sterling';
   const email = localStorage.getItem('userEmail') || 'j.sterling@metrohealth.org';
   const roleKey = localStorage.getItem('userRole') || 'onboard_cso';
   const institution = localStorage.getItem('userInstitution') || 'Metro Health System';
   const address = localStorage.getItem('userAddress') || '123 Medical Center Blvd, City, State';
   const facilityName = localStorage.getItem('userFacilityName') || 'Main Campus — Building A';
 
+  // Extract fullName from localStorage or fallback dynamically to email prefix
+  let fullName = localStorage.getItem('userFullName');
+  if (!fullName && email) {
+    const prefix = email.split('@')[0];
+    fullName = prefix
+      .split(/[\._\-]/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+  if (!fullName) {
+    fullName = 'Dr. Julian Sterling';
+  }
+
   // Get initials for Avatar
   const getInitials = (name) => {
+    if (!name) return 'MH';
     return name
       .split(' ')
+      .filter(Boolean)
       .map((n) => n[0])
       .join('')
       .toUpperCase()

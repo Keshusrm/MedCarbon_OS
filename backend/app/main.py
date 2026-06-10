@@ -167,7 +167,7 @@ def get_compliance():
             "WHO Climate":  {"score": 61, "status": "In Progress"},
             "UN SDGs":      {"score": 88, "status": "Aligned"},
         },
-        "reporting_period": "Q1-Q2 2024",
+        "reporting_period": "Q1-Q2 2026",
         "institution": "Metro Health System",
     }
 

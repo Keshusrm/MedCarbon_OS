@@ -8,6 +8,7 @@ import TelemetryPage from './pages/TelemetryPage';
 import CompliancePage from './pages/CompliancePage';
 import ForecastingPage from './pages/ForecastingPage';
 import PredictionPage from './pages/PredictionPage';
+import ProfilePage from './pages/ProfilePage';
 
 // Route Guard Component
 function ProtectedRoute({ children }) {
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/compliance" element={<ProtectedRoute><CompliancePage /></ProtectedRoute>} />
             <Route path="/forecasting" element={<ProtectedRoute><ForecastingPage /></ProtectedRoute>} />
             <Route path="/predict" element={<ProtectedRoute><PredictionPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/login" replace />} />

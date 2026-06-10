@@ -1,11 +1,36 @@
-import { NavLink } from 'react-router-dom';
-import { Search, Shield, Bell, Settings, Sun, Moon, Leaf } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Search, Bell, Settings, Sun, Moon, Leaf, User, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { t, language, toggleLanguage } = useLanguage();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownRef]);
+
+  const userFullName = localStorage.getItem('userFullName') || 'Metro Health';
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+  const initials = getInitials(userFullName);
 
   return (
     <header className="h-14 bg-white dark:bg-navy-900 border-b border-gray-100 dark:border-navy-700 flex items-center px-6 gap-4 transition-colors duration-300 sticky top-0 z-40">
@@ -74,9 +99,6 @@ export default function Navbar() {
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
-        <button className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
-          <Shield size={16} />
-        </button>
         <button className="relative p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
           <Bell size={16} />
           <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
@@ -84,8 +106,45 @@ export default function Navbar() {
         <button className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
           <Settings size={16} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cobalt-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold ml-1 cursor-pointer">
-          MH
+        <div className="relative" ref={dropdownRef}>
+          <div
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-cobalt-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold ml-1 cursor-pointer hover:shadow-md transition-all duration-200 select-none"
+          >
+            {initials}
+          </div>
+
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-navy-900 border border-gray-100 dark:border-navy-700 rounded-xl shadow-xl py-2 z-50 animate-slide-up">
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  navigate('/profile');
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 flex items-center gap-2.5 transition-colors font-medium"
+              >
+                <User size={15} className="text-gray-400" />
+                Profile
+              </button>
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('userEmail');
+                  localStorage.removeItem('userFullName');
+                  localStorage.removeItem('userRole');
+                  localStorage.removeItem('userInstitution');
+                  localStorage.removeItem('userAddress');
+                  localStorage.removeItem('userFacilityName');
+                  navigate('/login', { replace: true });
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2.5 transition-colors font-semibold border-t border-gray-50 dark:border-navy-800 mt-1"
+              >
+                <LogOut size={15} className="text-red-500" />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

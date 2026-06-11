@@ -23,7 +23,7 @@ export default function OnboardPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', institution: '', address: '', facilityName: '', dept: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', institution: '', address: '', facilityName: '', dept: 'Operations & Facilities' });
 
   const handleNext = async () => {
     setErrorMsg('');
@@ -59,6 +59,12 @@ export default function OnboardPage() {
           body: JSON.stringify({
             email: form.email,
             password: form.password,
+            full_name: form.fullName,
+            role: selectedRole,
+            institution: form.institution,
+            address: form.address,
+            facility_name: form.facilityName,
+            department: form.dept
           }),
         });
 
@@ -263,7 +269,7 @@ export default function OnboardPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Primary Department</label>
-                  <select id="facility-dept" className="input-field">
+                  <select id="facility-dept" className="input-field" value={form.dept} onChange={e => setForm({...form, dept: e.target.value})}>
                     <option>Operations & Facilities</option>
                     <option>Clinical Services</option>
                     <option>Procurement & Supply Chain</option>

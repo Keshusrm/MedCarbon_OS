@@ -11,6 +11,11 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const [userRole, setUserRole] = useState(localStorage.getItem('userRole') || '');
+  const [fullName, setFullName] = useState(localStorage.getItem('userFullName') || '');
+  const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -21,12 +26,36 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownRef]);
 
-  const email = localStorage.getItem('userEmail') || '';
-  const userFullName = localStorage.getItem('userFullName') || '';
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    fetch(`${API_BASE}/api/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => {
+        if (res.ok) return res.json();
+        throw new Error('Failed to fetch profile');
+      })
+      .then(data => {
+        setUserRole(data.role || '');
+        setFullName(data.full_name || '');
+        setEmail(data.email || '');
+        
+        if (data.full_name) localStorage.setItem('userFullName', data.full_name);
+        if (data.role) localStorage.setItem('userRole', data.role);
+        if (data.email) localStorage.setItem('userEmail', data.email);
+      })
+      .catch(err => {
+        console.error("Error loading profile in navbar:", err);
+      });
+  }, []);
 
   const getInitials = () => {
-    if (userFullName) {
-      return userFullName
+    if (fullName) {
+      return fullName
         .split(' ')
         .filter(Boolean)
         .map((n) => n[0])
@@ -143,6 +172,18 @@ export default function Navbar() {
                 </div>
                 Profile
               </button>
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => {
+                    setShowDropdown(false);
+                    navigate('/admin');
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 flex items-center gap-2.5 transition-colors font-medium border-t border-gray-50 dark:border-navy-800"
+                >
+                  <Settings size={15} className="text-gray-400" />
+                  Admin Console
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowDropdown(false);

@@ -1,6 +1,7 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio, json, random, math, time, sqlite3, pickle
+import numpy as np
 from pathlib import Path
 from pydantic import BaseModel
 
@@ -8,6 +9,24 @@ from app.database import get_db_connection
 from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
 
 app = FastAPI(title="MedCarbon OS API", version="1.0.0")
+
+DATA_PATH = Path(__file__).parent / "data" / "Hospital Building Dataset.xlsx"
+
+@app.on_event("startup")
+def seed_admin_user():
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM users WHERE email = ?", ("admin@medcarbon.org",))
+        if not cursor.fetchone():
+            hashed = get_password_hash("adminpassword123")
+            conn.execute(
+                """INSERT INTO users 
+                   (email, password_hash, full_name, role, institution, address, facility_name, department) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                ("admin@medcarbon.org", hashed, "System Admin", "admin", "MedCarbon OS", "Global HQ", "Main System Node", "Administration")
+            )
+            conn.commit()
+            print("🚀 Admin user seeded successfully.")
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,6 +64,44 @@ def load_rf_model():
 class UserRegister(BaseModel):
     email: str
     password: str
+    full_name: str | None = None
+    role: str | None = None
+    institution: str | None = None
+    address: str | None = None
+    facility_name: str | None = None
+    department: str | None = None
+
+class UserAdminCreate(BaseModel):
+    email: str
+    password: str
+    full_name: str | None = None
+    role: str | None = None
+    institution: str | None = None
+    address: str | None = None
+    facility_name: str | None = None
+    department: str | None = None
+
+class UserAdminUpdate(BaseModel):
+    full_name: str | None = None
+    role: str | None = None
+    institution: str | None = None
+    address: str | None = None
+    facility_name: str | None = None
+    department: str | None = None
+    password: str | None = None
+
+class DatasetRowData(BaseModel):
+    date_time: str
+    electricity_facility: float
+    fans_electricity: float
+    cooling_electricity: float
+    heating_electricity: int
+    interior_lights_electricity: float
+    interior_equipment_electricity: float
+    gas_facility: float
+    heating_gas: float
+    interior_equipment_gas: float
+    water_heater_gas: float
 
 class UserLogin(BaseModel):
     email: str
@@ -194,8 +251,10 @@ def register(user: UserRegister):
     try:
         with get_db_connection() as conn:
             conn.execute(
-                "INSERT INTO users (email, password_hash) VALUES (?, ?)",
-                (user.email, hashed)
+                """INSERT INTO users 
+                   (email, password_hash, full_name, role, institution, address, facility_name, department) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (user.email, hashed, user.full_name, user.role or "onboard_cso", user.institution, user.address, user.facility_name, user.department)
             )
             conn.commit()
     except sqlite3.IntegrityError:
@@ -222,7 +281,203 @@ def login(user: UserLogin):
 
 @app.get("/api/auth/me")
 def get_me(current_user: str = Depends(get_current_user)):
-    return {"email": current_user}
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT email, full_name, role, institution, address, facility_name, department FROM users WHERE email = ?", (current_user,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        return dict(row)
+
+# ── Admin Panel Helper & Routes ───────────────────────────────────────────────
+
+def get_current_admin(current_user: str = Depends(get_current_user)):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT role FROM users WHERE email = ?", (current_user,))
+        row = cursor.fetchone()
+        if not row or row["role"] != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Administrative access required"
+            )
+    return current_user
+
+def retrain_models_task():
+    try:
+        from app.ml.pipeline import run_training
+        run_training()
+        print("🎉 Models retrained successfully in the background.")
+    except Exception as e:
+        print(f"❌ Failed to retrain models: {e}")
+
+# Admin User Management
+@app.get("/api/admin/users")
+def get_users(current_admin: str = Depends(get_current_admin)):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, email, full_name, role, institution, address, facility_name, department, created_at FROM users")
+        rows = cursor.fetchall()
+        return [dict(r) for r in rows]
+
+@app.post("/api/admin/users")
+def create_user(user: UserAdminCreate, current_admin: str = Depends(get_current_admin)):
+    hashed = get_password_hash(user.password)
+    try:
+        with get_db_connection() as conn:
+            conn.execute(
+                """INSERT INTO users 
+                   (email, password_hash, full_name, role, institution, address, facility_name, department) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (user.email, hashed, user.full_name, user.role, user.institution, user.address, user.facility_name, user.department)
+            )
+            conn.commit()
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    return {"status": "success", "message": "User created successfully."}
+
+@app.put("/api/admin/users/{user_id}")
+def update_user(user_id: int, user: UserAdminUpdate, current_admin: str = Depends(get_current_admin)):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT email FROM users WHERE id = ?", (user_id,))
+        existing = cursor.fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        if user.password:
+            hashed = get_password_hash(user.password)
+            conn.execute(
+                """UPDATE users SET 
+                   password_hash = ?, full_name = ?, role = ?, institution = ?, address = ?, facility_name = ?, department = ?
+                   WHERE id = ?""",
+                (hashed, user.full_name, user.role, user.institution, user.address, user.facility_name, user.department, user_id)
+            )
+        else:
+            conn.execute(
+                """UPDATE users SET 
+                   full_name = ?, role = ?, institution = ?, address = ?, facility_name = ?, department = ?
+                   WHERE id = ?""",
+                (user.full_name, user.role, user.institution, user.address, user.facility_name, user.department, user_id)
+            )
+        conn.commit()
+    return {"status": "success", "message": "User updated successfully."}
+
+@app.delete("/api/admin/users/{user_id}")
+def delete_user(user_id: int, current_admin: str = Depends(get_current_admin)):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT email FROM users WHERE id = ?", (user_id,))
+        existing = cursor.fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="User not found")
+        if existing["email"] == "admin@medcarbon.org":
+            raise HTTPException(status_code=400, detail="Cannot delete default system administrator")
+            
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+    return {"status": "success", "message": "User deleted successfully."}
+
+# Admin Dataset Management (Hospital Building Dataset.xlsx)
+@app.get("/api/admin/dataset")
+def get_dataset(page: int = 1, limit: int = 50, current_admin: str = Depends(get_current_admin)):
+    import pandas as pd
+    if not DATA_PATH.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found")
+        
+    df = pd.read_excel(DATA_PATH)
+    total_rows = len(df)
+    
+    start = (page - 1) * limit
+    end = start + limit
+    
+    df_slice = df.iloc[start:end].replace({np.nan: None})
+    
+    rows = []
+    for idx, row in df_slice.iterrows():
+        rdata = row.to_dict()
+        rdata["_index"] = idx
+        rows.append(rdata)
+        
+    return {
+        "columns": list(df.columns),
+        "total": total_rows,
+        "page": page,
+        "limit": limit,
+        "rows": rows
+    }
+
+@app.post("/api/admin/dataset/row")
+def add_dataset_row(row: DatasetRowData, background_tasks: BackgroundTasks, current_admin: str = Depends(get_current_admin)):
+    import pandas as pd
+    if not DATA_PATH.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found")
+        
+    df = pd.read_excel(DATA_PATH)
+    
+    new_row = {
+        "Date/Time": row.date_time,
+        "Electricity:Facility [kW](Hourly)": row.electricity_facility,
+        "Fans:Electricity [kW](Hourly)": row.fans_electricity,
+        "Cooling:Electricity [kW](Hourly)": row.cooling_electricity,
+        "Heating:Electricity [kW](Hourly)": row.heating_electricity,
+        "InteriorLights:Electricity [kW](Hourly)": row.interior_lights_electricity,
+        "InteriorEquipment:Electricity [kW](Hourly)": row.interior_equipment_electricity,
+        "Gas:Facility [kW](Hourly)": row.gas_facility,
+        "Heating:Gas [kW](Hourly)": row.heating_gas,
+        "InteriorEquipment:Gas [kW](Hourly)": row.interior_equipment_gas,
+        "Water Heater:WaterSystems:Gas [kW](Hourly)": row.water_heater_gas
+    }
+    
+    df_new = pd.DataFrame([new_row])
+    df = pd.concat([df, df_new], ignore_index=True)
+    df.to_excel(DATA_PATH, index=False)
+    
+    background_tasks.add_task(retrain_models_task)
+    return {"status": "success", "message": "Row added and retraining started in the background."}
+
+@app.put("/api/admin/dataset/row/{index}")
+def update_dataset_row(index: int, row: DatasetRowData, background_tasks: BackgroundTasks, current_admin: str = Depends(get_current_admin)):
+    import pandas as pd
+    if not DATA_PATH.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found")
+        
+    df = pd.read_excel(DATA_PATH)
+    if index < 0 or index >= len(df):
+        raise HTTPException(status_code=400, detail="Invalid row index")
+        
+    df.at[index, "Date/Time"] = row.date_time
+    df.at[index, "Electricity:Facility [kW](Hourly)"] = row.electricity_facility
+    df.at[index, "Fans:Electricity [kW](Hourly)"] = row.fans_electricity
+    df.at[index, "Cooling:Electricity [kW](Hourly)"] = row.cooling_electricity
+    df.at[index, "Heating:Electricity [kW](Hourly)"] = row.heating_electricity
+    df.at[index, "InteriorLights:Electricity [kW](Hourly)"] = row.interior_lights_electricity
+    df.at[index, "InteriorEquipment:Electricity [kW](Hourly)"] = row.interior_equipment_electricity
+    df.at[index, "Gas:Facility [kW](Hourly)"] = row.gas_facility
+    df.at[index, "Heating:Gas [kW](Hourly)"] = row.heating_gas
+    df.at[index, "InteriorEquipment:Gas [kW](Hourly)"] = row.interior_equipment_gas
+    df.at[index, "Water Heater:WaterSystems:Gas [kW](Hourly)"] = row.water_heater_gas
+    
+    df.to_excel(DATA_PATH, index=False)
+    
+    background_tasks.add_task(retrain_models_task)
+    return {"status": "success", "message": "Row updated and retraining started in the background."}
+
+@app.delete("/api/admin/dataset/row/{index}")
+def delete_dataset_row(index: int, background_tasks: BackgroundTasks, current_admin: str = Depends(get_current_admin)):
+    import pandas as pd
+    if not DATA_PATH.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found")
+        
+    df = pd.read_excel(DATA_PATH)
+    if index < 0 or index >= len(df):
+        raise HTTPException(status_code=400, detail="Invalid row index")
+        
+    df = df.drop(index).reset_index(drop=True)
+    df.to_excel(DATA_PATH, index=False)
+    
+    background_tasks.add_task(retrain_models_task)
+    return {"status": "success", "message": "Row deleted and retraining started in the background."}
 
 # ── Prediction Endpoint ────────────────────────────────────────────────────────
 

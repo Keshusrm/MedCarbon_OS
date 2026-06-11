@@ -15,9 +15,31 @@ def create_tables():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                full_name TEXT,
+                role TEXT,
+                institution TEXT,
+                address TEXT,
+                facility_name TEXT,
+                department TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Safety migration: Add columns to existing tables if missing
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(users)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        new_cols = {
+            "full_name": "TEXT",
+            "role": "TEXT",
+            "institution": "TEXT",
+            "address": "TEXT",
+            "facility_name": "TEXT",
+            "department": "TEXT"
+        }
+        for col_name, col_type in new_cols.items():
+            if col_name not in columns:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}")
         conn.commit()
 
 # Initialize tables immediately upon import or via manual call

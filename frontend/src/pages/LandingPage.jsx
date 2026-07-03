@@ -12,8 +12,7 @@ import {
   ArrowRight,
   Sun,
   Moon,
-  Sparkles,
-  Database
+  Sparkles
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -24,17 +23,14 @@ export default function LandingPage() {
   const { t } = useLanguage();
   const targetRef = useRef(null);
   
-  // Hook into page scroll for background parallax animations
+  // Hook into page scroll for background parallax layers
   const { scrollYProgress } = useScroll();
   
   // Transform values for floating ecological & medical particles
-  const yLeaf1 = useTransform(scrollYProgress, [0, 1], [0, -350]);
-  const yLeaf2 = useTransform(scrollYProgress, [0, 1], [0, -180]);
-  const yCross1 = useTransform(scrollYProgress, [0, 1], [0, -280]);
-  const yCross2 = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const rot1 = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const rot2 = useTransform(scrollYProgress, [0, 1], [0, -90]);
-  const scale1 = useTransform(scrollYProgress, [0, 1], [0.9, 1.25]);
+  const yLeaf1 = useTransform(scrollYProgress, [0, 1], [0, -300]);
+  const yLeaf2 = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const yCross1 = useTransform(scrollYProgress, [0, 1], [0, -250]);
+  const yCross2 = useTransform(scrollYProgress, [0, 1], [0, 120]);
 
   const token = localStorage.getItem('token');
   const isLoggedIn = !!token;
@@ -56,46 +52,109 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-50 dark:bg-[#060D1F] text-gray-900 dark:text-gray-100 transition-colors duration-300">
       
-      {/* ── PARALLAX BACKGROUND PARTICLES ──────────────────────────────────── */}
+      {/* ── STYLE BLOCK FOR CORE ANIMATIONS ────────────────────────────────── */}
+      <style>{`
+        @keyframes drift-slow {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(60px, -80px) scale(1.15); }
+          66% { transform: translate(-40px, 40px) scale(0.9); }
+        }
+        @keyframes drift-reverse {
+          0%, 100% { transform: translate(0px, 0px) scale(1.1); }
+          50% { transform: translate(-80px, 60px) scale(0.85); }
+        }
+        @keyframes ecg-flow {
+          0% { stroke-dashoffset: 2000; }
+          100% { stroke-dashoffset: 0; }
+        }
+        .animate-drift-1 {
+          animation: drift-slow 22s ease-in-out infinite;
+        }
+        .animate-drift-2 {
+          animation: drift-reverse 28s ease-in-out infinite;
+        }
+        .animate-ecg {
+          stroke-dasharray: 1000;
+          animation: ecg-flow 16s linear infinite;
+        }
+      `}</style>
+
+      {/* ── RICH AMBIENT BACKGROUND ANIMATION ─────────────────────────────── */}
       <div className="absolute inset-0 pointer-events-none z-0">
         
-        {/* Floating Mint Leaf (Right Top) */}
+        {/* Continuous Floating Glowing Orbs (Teal, Mint, Blue) */}
+        <div className="absolute top-[10%] left-[20%] w-[450px] h-[450px] rounded-full bg-teal-500/10 dark:bg-teal-500/5 blur-[120px] animate-drift-1" />
+        <div className="absolute bottom-[20%] right-[15%] w-[500px] h-[500px] rounded-full bg-emerald-500/8 dark:bg-emerald-500/4 blur-[110px] animate-drift-2" />
+        <div className="absolute top-[40%] right-[10%] w-[350px] h-[350px] rounded-full bg-blue-500/6 dark:bg-blue-500/3 blur-[90px] animate-drift-1" />
+
+        {/* Continuous Flowing Heartbeat/ECG Grid Lines */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ecg-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00BFA5" />
+              <stop offset="50%" stopColor="#1A4FD6" />
+              <stop offset="100%" stopColor="#00BFA5" />
+            </linearGradient>
+          </defs>
+          <path 
+            className="animate-ecg"
+            d="M -100 250 L 300 250 L 330 250 L 340 270 L 350 170 L 360 330 L 370 250 L 390 250 L 800 250 L 830 250 L 840 275 L 850 180 L 860 320 L 870 250 L 890 250 L 1300 250 L 1330 250 L 1340 270 L 1350 170 L 1360 330 L 1370 250 L 1390 250 L 2000 250" 
+            fill="none" 
+            stroke="url(#ecg-grad)" 
+            strokeWidth="3" 
+          />
+          <path 
+            className="animate-ecg"
+            d="M -50 550 L 450 550 L 480 550 L 490 570 L 500 470 L 510 630 L 520 550 L 540 550 L 1050 550 L 1080 550 L 1090 575 L 1100 480 L 1110 620 L 1120 550 L 1140 550 L 2000 550" 
+            fill="none" 
+            stroke="url(#ecg-grad)" 
+            strokeWidth="2" 
+            style={{ animationDelay: '-8s' }}
+          />
+        </svg>
+
+        {/* ── PARALLAX + DRIFTING PARTICLES ───────────────────────────────── */}
+        
+        {/* Mint Leaf (Top Right) */}
         <motion.div 
-          style={{ y: yLeaf1, rotate: rot1, scale: scale1 }}
-          className="absolute top-36 right-[10%] text-emerald-400/10 dark:text-emerald-500/15"
+          style={{ y: yLeaf1 }}
+          animate={{ y: [0, -20, 0], rotate: [0, 8, -8, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-36 right-[10%] text-emerald-500/10 dark:text-emerald-500/15"
         >
-          <Leaf size={180} />
+          <Leaf size={160} />
         </motion.div>
 
-        {/* Floating Medical Cross / Heartbeat (Left Middle) */}
+        {/* Pulse Heartbeat Icon (Left Middle) */}
         <motion.div 
-          style={{ y: yCross1, rotate: rot2 }}
+          style={{ y: yCross1 }}
+          animate={{ scale: [1, 1.05, 0.95, 1], opacity: [0.7, 0.9, 0.7] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-[40%] left-[8%] text-teal-400/10 dark:text-teal-400/10"
         >
-          <Activity size={140} />
+          <Activity size={120} />
         </motion.div>
 
-        {/* Floating Small Leaf (Left Bottom) */}
+        {/* Mint Leaf (Left Bottom) */}
         <motion.div 
-          style={{ y: yLeaf2, rotate: rot1 }}
+          style={{ y: yLeaf2 }}
+          animate={{ y: [0, 15, 0], rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           className="absolute bottom-[20%] left-[12%] text-emerald-400/5 dark:text-emerald-500/10"
         >
-          <Leaf size={90} />
+          <Leaf size={80} />
         </motion.div>
 
-        {/* Floating Small Cross (Right Bottom) */}
+        {/* Pulse Heartbeat Icon (Right Bottom) */}
         <motion.div 
-          style={{ y: yCross2, rotate: rot2 }}
-          className="absolute bottom-[10%] right-[15%] text-teal-400/10 dark:text-teal-500/10"
+          style={{ y: yCross2 }}
+          animate={{ scale: [0.95, 1.05, 0.95] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-[12%] right-[15%] text-teal-400/10 dark:text-teal-500/10"
         >
-          <Activity size={80} />
+          <Activity size={70} />
         </motion.div>
 
-        {/* Top-Right Glowing Orb */}
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/5 dark:bg-teal-500/5 blur-[120px]" />
-        
-        {/* Left-Middle Glowing Orb */}
-        <div className="absolute top-[35%] left-[-15%] w-[500px] h-[500px] rounded-full bg-emerald-500/5 dark:bg-emerald-500/5 blur-[100px]" />
       </div>
 
       {/* ── STICKY GLASSMORPHIC HEADER ────────────────────────────────────── */}

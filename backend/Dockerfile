@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 # Copy application files (app directory and subfolders)
 COPY ./app /code/app
 
+# Train ML models during build
+RUN cd /code && python -m ml.pipeline
+
 # Expose port 7860 (Hugging Face Spaces expects traffic on 7860)
 EXPOSE 7860
 

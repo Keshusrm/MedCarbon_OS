@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 import OnboardPage from './pages/OnboardPage';
 import DashboardPage from './pages/DashboardPage';
 import TelemetryPage from './pages/TelemetryPage';
@@ -29,8 +30,8 @@ export default function App() {
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             
-            {/* Protected Dashboard/App Routes */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* Public Landing Page */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/onboard" element={<OnboardPage />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/telemetry" element={<ProtectedRoute><TelemetryPage /></ProtectedRoute>} />

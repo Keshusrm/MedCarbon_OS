@@ -5,7 +5,7 @@ import pickle, warnings, os
 
 warnings.filterwarnings("ignore")
 
-DATA_PATH = Path(__file__).parent.parent / "data" / "Hospital Building Dataset.xlsx"
+DATA_PATH = Path(__file__).parent.parent / "data" / "Hospital_Dataset1.csv"
 MODELS_PATH = Path(__file__).parent / "models"
 MODELS_PATH.mkdir(exist_ok=True)
 
@@ -15,7 +15,7 @@ GAS_FACTOR = 0.202            # kgCO2e per kWh (natural gas)
 KG_TO_T = 1 / 1000
 
 def load_data():
-    df = pd.read_excel(DATA_PATH, sheet_name=0)
+    df = pd.read_csv(DATA_PATH)
     df.columns = [c.strip() for c in df.columns]
     return df
 
@@ -52,7 +52,8 @@ def train_random_forest(df):
     from sklearn.metrics import r2_score
 
     feature_cols = [c for c in df.columns if c not in [
-        "scope1_tco2e","scope2_tco2e","total_tco2e"
+        "scope1_tco2e","scope2_tco2e","total_tco2e",
+        "Hour", "Day", "Month", "Weekday"
     ] and df[c].dtype in [np.float64, np.int64]]
 
     X = df[feature_cols]
@@ -77,7 +78,8 @@ def train_xgboost(df):
     df_safe = sanitize_cols(df)
 
     feature_cols = [c for c in df_safe.columns if c not in [
-        "scope1_tco2e","scope2_tco2e","total_tco2e"
+        "scope1_tco2e","scope2_tco2e","total_tco2e",
+        "Hour", "Day", "Month", "Weekday"
     ] and df_safe[c].dtype in [np.float64, np.int64]]
 
     X = df_safe[feature_cols]

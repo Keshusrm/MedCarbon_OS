@@ -10,7 +10,7 @@ from app.auth import get_password_hash, verify_password, create_access_token, ge
 
 app = FastAPI(title="MedCarbon OS API", version="1.0.0")
 
-DATA_PATH = Path(__file__).parent / "data" / "Hospital Building Dataset.xlsx"
+DATA_PATH = Path(__file__).parent / "data" / "Hospital_Dataset1.csv"
 
 @app.on_event("startup")
 def seed_admin_user():
@@ -378,14 +378,14 @@ def delete_user(user_id: int, current_admin: str = Depends(get_current_admin)):
         conn.commit()
     return {"status": "success", "message": "User deleted successfully."}
 
-# Admin Dataset Management (Hospital Building Dataset.xlsx)
+# Admin Dataset Management (Hospital_Dataset1.csv)
 @app.get("/api/admin/dataset")
 def get_dataset(page: int = 1, limit: int = 50, current_admin: str = Depends(get_current_admin)):
     import pandas as pd
     if not DATA_PATH.exists():
         raise HTTPException(status_code=404, detail="Dataset file not found")
         
-    df = pd.read_excel(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
     total_rows = len(df)
     
     start = (page - 1) * limit
@@ -413,7 +413,7 @@ def add_dataset_row(row: DatasetRowData, background_tasks: BackgroundTasks, curr
     if not DATA_PATH.exists():
         raise HTTPException(status_code=404, detail="Dataset file not found")
         
-    df = pd.read_excel(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
     
     new_row = {
         "Date/Time": row.date_time,
@@ -431,7 +431,7 @@ def add_dataset_row(row: DatasetRowData, background_tasks: BackgroundTasks, curr
     
     df_new = pd.DataFrame([new_row])
     df = pd.concat([df, df_new], ignore_index=True)
-    df.to_excel(DATA_PATH, index=False)
+    df.to_csv(DATA_PATH, index=False)
     
     background_tasks.add_task(retrain_models_task)
     return {"status": "success", "message": "Row added and retraining started in the background."}
@@ -442,7 +442,7 @@ def update_dataset_row(index: int, row: DatasetRowData, background_tasks: Backgr
     if not DATA_PATH.exists():
         raise HTTPException(status_code=404, detail="Dataset file not found")
         
-    df = pd.read_excel(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
     if index < 0 or index >= len(df):
         raise HTTPException(status_code=400, detail="Invalid row index")
         
@@ -458,7 +458,7 @@ def update_dataset_row(index: int, row: DatasetRowData, background_tasks: Backgr
     df.at[index, "InteriorEquipment:Gas [kW](Hourly)"] = row.interior_equipment_gas
     df.at[index, "Water Heater:WaterSystems:Gas [kW](Hourly)"] = row.water_heater_gas
     
-    df.to_excel(DATA_PATH, index=False)
+    df.to_csv(DATA_PATH, index=False)
     
     background_tasks.add_task(retrain_models_task)
     return {"status": "success", "message": "Row updated and retraining started in the background."}
@@ -469,12 +469,12 @@ def delete_dataset_row(index: int, background_tasks: BackgroundTasks, current_ad
     if not DATA_PATH.exists():
         raise HTTPException(status_code=404, detail="Dataset file not found")
         
-    df = pd.read_excel(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
     if index < 0 or index >= len(df):
         raise HTTPException(status_code=400, detail="Invalid row index")
         
     df = df.drop(index).reset_index(drop=True)
-    df.to_excel(DATA_PATH, index=False)
+    df.to_csv(DATA_PATH, index=False)
     
     background_tasks.add_task(retrain_models_task)
     return {"status": "success", "message": "Row deleted and retraining started in the background."}

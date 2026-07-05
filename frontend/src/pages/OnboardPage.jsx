@@ -4,6 +4,7 @@ import { Shield, Building2, Stethoscope, Leaf, CheckCircle, Eye, EyeOff, Sun, Mo
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import MoleculesAnimation from '../components/MoleculesAnimation';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const steps = ['onboard_step1', 'onboard_step2', 'onboard_step3'];
@@ -96,6 +97,9 @@ export default function OnboardPage() {
   return (
     <div className="min-h-screen flex bg-white dark:bg-[#060D1F] transition-colors duration-300 relative overflow-hidden">
       
+      {/* 3D Interactive Molecules Animation */}
+      <MoleculesAnimation theme={theme} />
+
       {/* STYLE BLOCK FOR ANIMATED GRID / ECG */}
       <style>{`
         @keyframes ecg-flow-onboard {
@@ -109,7 +113,7 @@ export default function OnboardPage() {
       `}</style>
 
       {/* Left Brand Panel */}
-      <div className="hidden lg:flex lg:w-2/5 bg-white dark:bg-[#060D1F] flex-col justify-between p-12 border-r border-gray-100 dark:border-navy-900 relative">
+      <div className="hidden lg:flex lg:w-2/5 bg-transparent flex-col justify-between p-12 border-r border-gray-100 dark:border-navy-900 relative z-10">
         {/* Decorative Grid Lines */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-[0.05] dark:opacity-[0.02]">
           <svg className="absolute bottom-0 left-0 w-full h-[150px]" xmlns="http://www.w3.org/2000/svg">

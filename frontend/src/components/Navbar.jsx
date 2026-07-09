@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Search, Bell, Settings, Sun, Moon, Leaf, User, LogOut } from 'lucide-react';
+import { Settings, Sun, Moon, Leaf, User, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -107,17 +107,7 @@ export default function Navbar() {
         ))}
       </nav>
 
-      {/* Search */}
-      <div className="flex-1 max-w-64 ml-4">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder={t('nav_search')}
-            className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 dark:bg-navy-800 border border-gray-200 dark:border-navy-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cobalt-500 transition-all"
-          />
-        </div>
-      </div>
+
 
       {/* Right controls */}
       <div className="ml-auto flex items-center gap-2">
@@ -143,13 +133,7 @@ export default function Navbar() {
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
-        <button className="relative p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
-          <Bell size={16} />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-        </button>
-        <button className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
-          <Settings size={16} />
-        </button>
+
         <div className="relative" ref={dropdownRef}>
           <div
             onClick={() => setShowDropdown(!showDropdown)}

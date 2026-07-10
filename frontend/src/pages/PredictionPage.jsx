@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Sparkles, BarChart2, Cpu, Zap, Thermometer, Flame, Sun, Calendar, Clock, RotateCcw } from 'lucide-react';
+import { Sparkles, BarChart2, Cpu, Zap, Thermometer, Flame, Sun, Calendar, Clock, RotateCcw, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import DashboardLayout from '../components/DashboardLayout';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -36,6 +38,89 @@ export default function PredictionPage() {
     setForm({ ...BASELINE_VALUES });
     setResult(null);
     setErrorMsg('');
+  };
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('MedCarbon OS - Facility Carbon Prediction Report', 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+    
+    doc.setFontSize(14);
+    doc.text('Input Parameters', 14, 40);
+    
+    const paramsData = [
+      ['Total Facility Baseline (kW)', form.electricity_facility],
+      ['Ventilation & Fans (kW)', form.fans_electricity],
+      ['Cooling / Chillers (kW)', form.cooling_electricity],
+      ['Space Heating (Electric) (kW)', form.heating_electricity],
+      ['Interior Lights (kW)', form.interior_lights_electricity],
+      ['Interior Med Equipment (kW)', form.interior_equipment_electricity],
+      ['Total Gas Supply (kW)', form.gas_facility],
+      ['Gas Boilers / Heating (kW)', form.heating_gas],
+      ['Lab Equipment Gas (kW)', form.interior_equipment_gas],
+      ['Water Systems / Heaters (kW)', form.water_heater_gas],
+      ['Hour of Day', form.hour + ':00'],
+      ['Day of Year', 'Day ' + form.day_of_year]
+    ];
+    
+    doc.autoTable({
+      startY: 45,
+      head: [['Parameter', 'Value']],
+      body: paramsData,
+      theme: 'grid',
+      headStyles: { fillColor: [13, 148, 136] }
+    });
+    
+    let nextY = doc.lastAutoTable.finalY + 10;
+    
+    if (result) {
+      doc.setFontSize(14);
+      doc.text('Prediction Results', 14, nextY);
+      
+      const resultsData = [
+        ['Estimated Total Footprint (tCO2e/hour)', result.predicted_total],
+        ['Total Electricity (kWh)', result.total_electricity_kwh],
+        ['Total Gas (kWh)', result.total_gas_kwh],
+        ['Scope 1 - Direct Gas (tCO2e)', result.scope1_calculated],
+        ['Scope 2 - Indirect Electricity (tCO2e)', result.scope2_calculated]
+      ];
+      
+      doc.autoTable({
+        startY: nextY + 5,
+        head: [['Metric', 'Value']],
+        body: resultsData,
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] }
+      });
+      
+      nextY = doc.lastAutoTable.finalY + 10;
+      
+      doc.setFontSize(14);
+      doc.text('AI Interventions Suggested', 14, nextY);
+      
+      const interventions = [];
+      if (result.scope2_calculated > 0.15) {
+        interventions.push(['Peak Load Shedding Active', 'Electrical consumption is high. Consider shifting heavy clinical operations or scanning loads off peak hours.']);
+      }
+      if (result.scope1_calculated > 0.05) {
+        interventions.push(['Optimize Boiler Settings', 'Gas-fired heating exceeds baseline guidelines. Recommend applying a dynamic HVAC temperature setback.']);
+      }
+      interventions.push(['Balanced Operations', 'Sub-systems are currently operating within nominal compliance thresholds under GHG reporting frameworks.']);
+      
+      doc.autoTable({
+        startY: nextY + 5,
+        head: [['Suggestion', 'Details']],
+        body: interventions,
+        theme: 'grid',
+        headStyles: { fillColor: [234, 88, 12] }
+      });
+    }
+    
+    doc.save('MedCarbon_Prediction_Report.pdf');
   };
 
   const handlePredict = async (e) => {
@@ -291,6 +376,17 @@ export default function PredictionPage() {
             {result && (
               <div className="space-y-6 animate-slide-up">
                 
+                {/* PDF Download Action */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg shadow-md transition-colors duration-200"
+                  >
+                    <FileText size={16} />
+                    Download PDF Report
+                  </button>
+                </div>
+
                 {/* Main Prediction Score */}
                 <div className="card p-6 flex flex-col items-center text-center">
                   <span className="text-xs font-bold text-cobalt-500 dark:text-cobalt-400 tracking-widest mb-4">

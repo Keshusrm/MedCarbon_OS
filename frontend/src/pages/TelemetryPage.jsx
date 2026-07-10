@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, Wifi, ExternalLink, Download } from 'lucide-re
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import DashboardLayout from '../components/DashboardLayout';
 import { useLanguage } from '../context/LanguageContext';
+import TelemetryDetailModal from '../components/TelemetryDetailModal';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const WS_BASE = API_BASE.replace('http', 'ws');
@@ -42,7 +43,7 @@ const initialCards = [
   { id: 'HEAT-REC-WHR',category: 'COGENERATION',status: 'LIVE',   name: 'Waste Heat Recovery',    primary: 12.1,   unit: 'GJ/d', secondary: 'Efficiency: 88%', color: '#EC4899', variance: '+3.1%',  timestamp: '14:22:11 UTC', ref: 'Exhaust Heat Capture' },
 ];
 
-function TelemetryCard({ card, t }) {
+function TelemetryCard({ card, t, onLearnMore }) {
   const sparkData = mkSparkline(Math.abs(card.primary), 14, 0.08);
   const lineColor = card.status === 'ANOMALY' ? '#EF4444' : card.color;
 
@@ -72,7 +73,10 @@ function TelemetryCard({ card, t }) {
 
       <div className="flex justify-between items-center mt-2">
         <p className="text-xs text-gray-400 dark:text-gray-500">{card.secondary}</p>
-        <button className="text-xs text-cobalt-500 dark:text-teal-400 hover:underline font-medium flex items-center gap-0.5">
+        <button 
+          onClick={() => onLearnMore(card.id)}
+          className="text-xs text-cobalt-500 dark:text-teal-400 hover:underline font-medium flex items-center gap-0.5"
+        >
           {card.status === 'ANOMALY' ? t('tele_investigate') : t('tele_learn')}
           <ExternalLink size={10} />
         </button>
@@ -84,6 +88,7 @@ function TelemetryCard({ card, t }) {
 export default function TelemetryPage() {
   const { t } = useLanguage();
   const [cards, setCards] = useState(initialCards);
+  const [selectedTelemetryId, setSelectedTelemetryId] = useState(null);
   const [wsStatus, setWsStatus] = useState('connecting');
   const wsRef = useRef(null);
 
@@ -192,7 +197,7 @@ export default function TelemetryPage() {
         {/* Telemetry Grid */}
         <div className="grid grid-cols-3 gap-4">
           {cards.map(card => (
-            <TelemetryCard key={card.id} card={card} t={t} />
+            <TelemetryCard key={card.id} card={card} t={t} onLearnMore={setSelectedTelemetryId} />
           ))}
         </div>
 
@@ -241,6 +246,12 @@ export default function TelemetryPage() {
           </div>
         </div>
       </div>
+
+      <TelemetryDetailModal 
+        isOpen={!!selectedTelemetryId} 
+        onClose={() => setSelectedTelemetryId(null)} 
+        telemetryId={selectedTelemetryId} 
+      />
     </DashboardLayout>
   );
 }

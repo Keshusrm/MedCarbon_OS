@@ -101,8 +101,8 @@ export default function CompliancePage() {
         </motion.div>
 
         {/* Overall Score Banner */}
-        <div className="hero-gradient rounded-2xl p-6 flex items-center gap-6">
-          <div className="relative w-24 h-24 flex items-center justify-center">
+        <div className="hero-gradient rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+          <div className="relative w-24 h-24 flex shrink-0 items-center justify-center">
             <svg width="96" height="96" className="-rotate-90">
               <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="7" />
               <circle cx="48" cy="48" r="40" fill="none" stroke="#00BFA5" strokeWidth="7" strokeLinecap="round"
@@ -113,7 +113,7 @@ export default function CompliancePage() {
           <div>
             <h2 className="text-white text-xl font-bold mb-1">Overall Compliance Score</h2>
             <p className="text-teal-300 text-sm mb-3">Metro Health System — Reporting Period: Q1–Q2 2026</p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center md:justify-start gap-3">
               {['GHG Protocol', 'ISO 14064', 'SBTi 1.5°C'].map(b => (
                 <span key={b} className="bg-white/10 border border-white/20 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
                   <CheckCircle size={10} className="text-teal-300" /> {b}
@@ -124,7 +124,7 @@ export default function CompliancePage() {
         </div>
 
         {/* Framework Cards */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
           {frameworks.map(f => (
             <div key={f.id} className="card p-5 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
               <div className="flex gap-4 items-start mb-4">

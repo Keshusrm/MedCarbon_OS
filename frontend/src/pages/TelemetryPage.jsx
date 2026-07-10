@@ -71,11 +71,12 @@ function TelemetryCard({ card, t, onLearnMore }) {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-2">
+      <div className="flex justify-between items-center mt-2 relative z-10">
         <p className="text-xs text-gray-400 dark:text-gray-500">{card.secondary}</p>
         <button 
+          type="button"
           onClick={() => onLearnMore(card.id)}
-          className="text-xs text-cobalt-500 dark:text-teal-400 hover:underline font-medium flex items-center gap-0.5"
+          className="text-xs text-cobalt-500 dark:text-teal-400 hover:underline font-medium flex items-center gap-0.5 cursor-pointer relative z-20"
         >
           {card.status === 'ANOMALY' ? t('tele_investigate') : t('tele_learn')}
           <ExternalLink size={10} />

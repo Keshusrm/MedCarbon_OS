@@ -256,13 +256,11 @@ const glowColors = {
 };
 
 export default function TelemetryDetailModal({ isOpen, onClose, telemetryId }) {
-  if (!telemetryId) return null;
-  const data = telemetryData[telemetryId];
-  if (!data) return null;
+  const data = telemetryId ? telemetryData[telemetryId] : null;
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && data && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

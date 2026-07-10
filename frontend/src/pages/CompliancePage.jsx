@@ -4,6 +4,8 @@ import { CheckCircle, Shield, Globe, Leaf, TrendingUp, Award, ArrowRight } from 
 import DashboardLayout from '../components/DashboardLayout';
 import { useLanguage } from '../context/LanguageContext';
 import ComplianceDetailModal from '../components/ComplianceDetailModal';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const frameworks = [
   {
@@ -80,6 +82,39 @@ function ScoreRing({ score, color }) {
 export default function CompliancePage() {
   const { t } = useLanguage();
   const [selectedFramework, setSelectedFramework] = useState(null);
+
+  const handleDownloadAudit = () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text('MedCarbon OS - Full Compliance Audit Report', 14, 22);
+      
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+      doc.text(`Overall Compliance Score: 83%`, 14, 36);
+      
+      const tableData = frameworks.map(f => [
+        f.name,
+        f.status,
+        `${f.score}%`,
+        f.standards.join('\n')
+      ]);
+      
+      autoTable(doc, {
+        startY: 45,
+        head: [['Framework', 'Status', 'Score', 'Key Standards']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [13, 148, 136] },
+        styles: { cellPadding: 4, fontSize: 10 },
+      });
+      
+      doc.save('MedCarbon_Compliance_Audit.pdf');
+    } catch (e) {
+      console.error("PDF generation failed", e);
+      alert("Failed to generate PDF.");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -169,7 +204,7 @@ export default function CompliancePage() {
             <h3 className="font-bold text-gray-900 dark:text-white">Full Compliance Audit Report</h3>
             <p className="text-xs text-gray-400 mt-0.5">GHG Protocol + ISO 14064 + SBTi — Q2 2026 Verified</p>
           </div>
-          <button id="download-audit-btn" className="btn-primary py-2.5 px-5 text-sm">
+          <button id="download-audit-btn" onClick={handleDownloadAudit} className="btn-primary py-2.5 px-5 text-sm">
             Download Report PDF
           </button>
         </div>

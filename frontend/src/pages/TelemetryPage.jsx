@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Activity, AlertTriangle, Wifi, ExternalLink, Download } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import DashboardLayout from '../components/DashboardLayout';
 import { useLanguage } from '../context/LanguageContext';
 import TelemetryDetailModal from '../components/TelemetryDetailModal';
@@ -92,6 +94,39 @@ export default function TelemetryPage() {
   const [selectedTelemetryId, setSelectedTelemetryId] = useState(null);
   const [wsStatus, setWsStatus] = useState('connecting');
   const wsRef = useRef(null);
+
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text('MedCarbon OS - Telemetry Historical Logs', 14, 22);
+      
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+      
+      const tableData = cards.map(c => [
+        `${c.id}\n${c.ref}`,
+        c.status.charAt(0) + c.status.slice(1).toLowerCase(),
+        `${c.primary} ${c.unit}`,
+        c.variance,
+        c.timestamp
+      ]);
+      
+      autoTable(doc, {
+        startY: 40,
+        head: [['System Ref', 'Status', 'Current Value', 'Variance', 'Timestamp']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] },
+        styles: { cellPadding: 4, fontSize: 10 },
+      });
+      
+      doc.save('MedCarbon_Telemetry_Logs.pdf');
+    } catch (e) {
+      console.error("PDF generation failed", e);
+      alert("Failed to generate PDF. Check console for details.");
+    }
+  };
 
   // WebSocket live updates
   useEffect(() => {
@@ -208,6 +243,7 @@ export default function TelemetryPage() {
             <h2 className="text-base font-bold text-gray-900 dark:text-white">{t('tele_historical')}</h2>
             <button
               id="export-pdf-btn"
+              onClick={handleExportPDF}
               className="flex items-center gap-2 btn-secondary text-sm py-2 px-4"
             >
               <Download size={14} />

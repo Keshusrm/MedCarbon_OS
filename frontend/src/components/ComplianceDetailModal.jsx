@@ -157,9 +157,10 @@ export default function ComplianceDetailModal({ isOpen, onClose, frameworkId }) 
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0A1633] rounded-3xl shadow-2xl border border-gray-100 dark:border-navy-800"
+            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden bg-white dark:bg-[#0A1633] rounded-3xl shadow-2xl border border-gray-100 dark:border-navy-800"
           >
-            {/* Header / Banner */}
+            <div className="overflow-y-auto w-full flex-1">
+              {/* Header / Banner */}
             <div className="relative p-8 overflow-hidden">
               <div className={`absolute top-0 right-0 w-64 h-64 rounded-full opacity-20 blur-3xl ${colorClasses[data.color].split(' ')[0].replace('text-', 'bg-')} -translate-y-1/2 translate-x-1/3`} />
               
@@ -216,6 +217,7 @@ export default function ComplianceDetailModal({ isOpen, onClose, frameworkId }) 
               >
                 Understood
               </button>
+            </div>
             </div>
           </motion.div>
         </motion.div>

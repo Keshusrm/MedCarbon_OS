@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Sparkles, BarChart2, Cpu, Zap, Thermometer, Flame, Sun, Calendar, Clock, RotateCcw, FileText } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import DashboardLayout from '../components/DashboardLayout';
 

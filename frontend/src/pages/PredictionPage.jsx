@@ -328,13 +328,27 @@ export default function PredictionPage() {
                 {loading ? (
                   <>
                     <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Analyzing metrics...
+                    Analyzing...
                   </>
                 ) : (
                   <>
                     <Sparkles size={18} /> Predict Footprint
                   </>
                 )}
+              </button>
+              <button
+                type="button"
+                disabled={!result}
+                onClick={handleDownloadPDF}
+                className={`py-3 flex items-center gap-2 justify-center flex-1 text-sm font-bold rounded-lg shadow-md transition-all duration-200 ${
+                  result 
+                    ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer hover:shadow-xl hover:-translate-y-0.5' 
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-navy-800 dark:text-gray-600'
+                }`}
+                title={!result ? 'Please run a prediction first' : 'Download PDF Report'}
+              >
+                <FileText size={18} />
+                PDF
               </button>
             </div>
           </form>
@@ -376,17 +390,6 @@ export default function PredictionPage() {
             {result && (
               <div className="space-y-6 animate-slide-up">
                 
-                {/* PDF Download Action */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleDownloadPDF}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg shadow-md transition-colors duration-200"
-                  >
-                    <FileText size={16} />
-                    Download PDF Report
-                  </button>
-                </div>
-
                 {/* Main Prediction Score */}
                 <div className="card p-6 flex flex-col items-center text-center">
                   <span className="text-xs font-bold text-cobalt-500 dark:text-cobalt-400 tracking-widest mb-4">

@@ -1,6 +1,9 @@
-import { CheckCircle, Shield, Globe, Leaf, TrendingUp, Award } from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle, Shield, Globe, Leaf, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useLanguage } from '../context/LanguageContext';
+import ComplianceDetailModal from '../components/ComplianceDetailModal';
 
 const frameworks = [
   {
@@ -76,15 +79,26 @@ function ScoreRing({ score, color }) {
 
 export default function CompliancePage() {
   const { t } = useLanguage();
+  const [selectedFramework, setSelectedFramework] = useState(null);
 
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">{t('comp_title')}</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-2xl">{t('comp_subtitle')}</p>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-50 to-white dark:from-navy-900 dark:to-navy-800 p-6 border border-gray-100 dark:border-navy-800 shadow-sm"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="relative z-10">
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">{t('comp_title')}</h1>
+            <p className="text-gray-600 dark:text-gray-300 text-sm max-w-2xl leading-relaxed">
+              {t('comp_subtitle')} Explore each framework below to learn how MedCarbon OS maps your facility's operational telemetry directly to international reporting standards in real-time.
+            </p>
+          </div>
+        </motion.div>
 
         {/* Overall Score Banner */}
         <div className="hero-gradient rounded-2xl p-6 flex items-center gap-6">
@@ -112,8 +126,8 @@ export default function CompliancePage() {
         {/* Framework Cards */}
         <div className="grid grid-cols-2 gap-5">
           {frameworks.map(f => (
-            <div key={f.id} className="card p-5">
-              <div className="flex gap-4 items-start">
+            <div key={f.id} className="card p-5 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
+              <div className="flex gap-4 items-start mb-4">
                 <ScoreRing score={f.score} color={f.color} />
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-1">
@@ -136,6 +150,15 @@ export default function CompliancePage() {
                   </ul>
                 </div>
               </div>
+              <div className="flex justify-end mt-auto pt-3 border-t border-gray-100 dark:border-navy-800/50">
+                <button
+                  onClick={() => setSelectedFramework(f.id)}
+                  className="group flex items-center gap-1.5 text-xs font-bold text-cobalt-600 dark:text-teal-400 hover:text-cobalt-800 dark:hover:text-teal-300 transition-colors bg-cobalt-50 dark:bg-teal-900/10 px-3 py-1.5 rounded-lg"
+                >
+                  Learn more 
+                  <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -151,6 +174,12 @@ export default function CompliancePage() {
           </button>
         </div>
       </div>
+      
+      <ComplianceDetailModal 
+        isOpen={!!selectedFramework} 
+        onClose={() => setSelectedFramework(null)} 
+        frameworkId={selectedFramework} 
+      />
     </DashboardLayout>
   );
 }

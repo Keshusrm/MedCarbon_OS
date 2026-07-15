@@ -11,9 +11,8 @@ services:
         value: 7860
 
   # Frontend Static Site
-  - type: web
+  - type: static
     name: medcarbon-frontend
-    env: static
     rootDir: frontend
     plan: free
     buildCommand: npm install && npm run build

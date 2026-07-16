@@ -5,8 +5,8 @@ import {
 } from 'recharts';
 import DashboardLayout from '../components/DashboardLayout';
 import { useLanguage } from '../context/LanguageContext';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // Mock forecast data — replaced by real API when available
 function generateForecast(hours = 48) {

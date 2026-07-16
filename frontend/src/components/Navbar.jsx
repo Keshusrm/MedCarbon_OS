@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Settings, Sun, Moon, Leaf, User, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { API_BASE } from '../config';
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -11,7 +12,7 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   const [userRole, setUserRole] = useState(localStorage.getItem('userRole') || '');
   const [fullName, setFullName] = useState(localStorage.getItem('userFullName') || '');
   const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');

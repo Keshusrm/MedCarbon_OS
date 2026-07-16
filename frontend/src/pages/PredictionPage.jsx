@@ -3,8 +3,8 @@ import { Sparkles, BarChart2, Cpu, Zap, Thermometer, Flame, Sun, Calendar, Clock
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import DashboardLayout from '../components/DashboardLayout';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const BASELINE_VALUES = {
   electricity_facility: 480.0,

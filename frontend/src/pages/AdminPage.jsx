@@ -4,8 +4,8 @@ import {
   Users, Database, Plus, Edit2, Trash2, 
   ChevronLeft, ChevronRight, RefreshCw, X, ShieldAlert 
 } from 'lucide-react';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dataset'); // 'dataset' or 'users'

@@ -4,8 +4,8 @@ import { Eye, EyeOff, Mail, Lock, Leaf, Sun, Moon, ArrowRight } from 'lucide-rea
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function LoginPage() {
   const { t, language, toggleLanguage } = useLanguage();

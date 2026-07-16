@@ -6,9 +6,10 @@ import autoTable from 'jspdf-autotable';
 import DashboardLayout from '../components/DashboardLayout';
 import { useLanguage } from '../context/LanguageContext';
 import TelemetryDetailModal from '../components/TelemetryDetailModal';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const WS_BASE = API_BASE.replace('http', 'ws');
+
 
 // Status badge component
 function StatusBadge({ status }) {

@@ -5,9 +5,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import MoleculesAnimation from '../components/MoleculesAnimation';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const steps = ['onboard_step1', 'onboard_step2', 'onboard_step3'];
+
 
 const roles = [
   { key: 'onboard_cso', icon: Shield },
